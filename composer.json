@@ -1,0 +1,49 @@
+{
+    "name": "coffreo/jms-translation-js-extractor-bundle",
+    "description": "Add javascript translation extractor for jms/translation-bundle package",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Cyril MERY",
+            "email": "cmery@coffreo.com"
+        }
+    ],
+    "keywords": [
+        "js",
+        "javascript",
+        "translation",
+        "translate",
+        "i18n",
+        "jms-translation-bundle",
+        "js-translation",
+        "bazinga"
+    ],
+    "suggest": {
+        "willdurand/js-translation-bundle": "Allow usage of symfony translation strings in Javascript"
+    },
+    "scripts": {
+        "test": "vendor/bin/simple-phpunit --coverage-text --coverage-html=build/coverage",
+        "cs": "vendor/bin/php-cs-fixer fix --diff --verbose"
+    },
+    "require": {
+        "php": "^5.6 || ^7.0",
+        "coffreo/js-translation-extractor": "^0.1",
+        "jms/translation-bundle": "^1.4@dev"
+    },
+    "require-dev": {
+        "symfony/phpunit-bridge": "^3.4 || ^4.0",
+        "coffreo/php-cs-fixer-config": "^2.2",
+        "matthiasnoback/symfony-dependency-injection-test": "^1.2 || ^2.3 || ^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Coffreo\\JMSTranslationJsExtractorBundle\\": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Coffreo\\JMSTranslationJsExtractorBundle\\Tests\\": "tests/"
+        }
+    }
+}

@@ -1,0 +1,69 @@
+language: php
+sudo: false
+cache:
+    directories:
+        - $HOME/.composer/cache/files
+        - $HOME/symfony-bridge/.phpunit
+
+env:
+    global:
+        - PHPUNIT_FLAGS="-v"
+        - CHECK_CS=false
+        - SYMFONY_PHPUNIT_DIR="$HOME/symfony-bridge/.phpunit"
+
+matrix:
+    fast_finish: true
+    include:
+        # Minimum supported dependencies with the latest and oldest PHP version
+        - php: 7.2
+          env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="weak_vendors"
+        - php: 5.6
+          env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="weak_vendors"
+
+        # Test the latest stable release
+        - php: 5.6
+        - php: 7.0
+          env: SYMFONY_PHPUNIT_VERSION="6.5"
+        - php: 7.1
+          env: SYMFONY_PHPUNIT_VERSION="6.5"
+        - php: 7.2
+          env: COVERAGE=true CHECK_CS=true PHPUNIT_FLAGS="-v --coverage-clover=build/coverage.xml"
+
+        # Test LTS versions. This makes sure we do not use Symfony packages with version greater
+        # than 2 or 3 respectively. Read more at https://github.com/symfony/lts
+        - php: 7.2
+          env: SYMFONY_VERSION="2.8"
+        - php: 7.2
+          env: SYMFONY_VERSION="3.4"
+
+        # Latest commit to master
+        - php: 7.2
+          env: STABILITY="dev"
+
+    allow_failures:
+        # Dev-master is allowed to fail.
+        - env: STABILITY="dev"
+
+before_install:
+    - echo "memory_limit=3G" >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+    - if [[ $COVERAGE != true ]]; then phpenv config-rm xdebug.ini || true; fi
+    - if ! [ -z "$STABILITY" ]; then composer config minimum-stability ${STABILITY}; fi;
+    - if [ -v "$SYMFONY_VERSION" ]; then travis_retry composer require --no-update symfony/flex; fi;
+    - if [ -v "$SYMFONY_VERSION" ]; then composer config extra.symfony.require "${SYMFONY_VERSION}"; fi;
+
+install:
+    # To be removed when this issue will be resolved: https://github.com/composer/composer/issues/5355
+    - if [[ "$COMPOSER_FLAGS" == *"--prefer-lowest"* ]]; then travis_retry composer update --prefer-dist --no-interaction --prefer-stable --quiet; fi
+    # For obscur reason, the PHP 5.6 with lowest dependencies is very long to execute, timeout has been raised
+    # to ensure stage is finished before timeout
+    - travis_retry composer update ${COMPOSER_FLAGS} --prefer-dist --no-interaction
+    - ./vendor/bin/simple-phpunit install
+
+script:
+    - composer validate --strict --no-check-lock
+    - if [[ $CHECK_CS = true ]]; then ./vendor/bin/php-cs-fixer fix --dry-run; fi
+    - ./vendor/bin/simple-phpunit $PHPUNIT_FLAGS
+
+after_success:
+    - if [[ $COVERAGE = true ]]; then wget https://scrutinizer-ci.com/ocular.phar; fi
+    - if [[ $COVERAGE = true ]]; then php ocular.phar code-coverage:upload --format=php-clover build/coverage.xml; fi

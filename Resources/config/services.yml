@@ -1,0 +1,8 @@
+services:
+    coffreo.jms_translation.js_extractor.js:
+        class:  Coffreo\JMSTranslationJsExtractorBundle\Extractor\JsFileExtractor
+        arguments:
+            - '@jms_translation.file_source_factory'
+            - ['js', 'jsx']
+        tags:
+            - { name: 'jms_translation.file_visitor' }
